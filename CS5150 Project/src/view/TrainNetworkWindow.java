@@ -14,6 +14,8 @@ import javax.swing.SwingConstants;
 
 import controller.GameController;
 
+//Window for training a new neural network opponent
+//Contains fields for the parameters
 public class TrainNetworkWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private static int minGameLength = 10, maxGameLength = 100000;
@@ -25,6 +27,8 @@ public class TrainNetworkWindow extends JFrame {
 	private GameController game;
 	private JTextField gamesField, displayField, delayField, movesField, layersField, layerSizeField, alphaField, pathField;
 	
+	//Initializes the window with the stated parameters as fields
+	//Takes a GameController as a parameter to pass it user given parameters
 	public TrainNetworkWindow(GameController game) {
 		this.game = game;
 		
@@ -37,11 +41,11 @@ public class TrainNetworkWindow extends JFrame {
 		
 		JLabel gamesLabel = new JLabel("Number of games (" + minGameLength + " - " + maxGameLength + "):", SwingConstants.RIGHT);
 		gamesField = new JTextField();
-		gamesField.setText("1000");
+		gamesField.setText("10000");
 		
-		JLabel displayLabel = new JLabel("Display every Xth game (0 - All):", SwingConstants.RIGHT);
+		JLabel displayLabel = new JLabel("Display every Xth game (X > 0):", SwingConstants.RIGHT);
 		displayField = new JTextField();
-		displayField.setText("1");
+		displayField.setText("100");
 		
 		JLabel delayLabel = new JLabel("Display delay in ms per move (" + minDelayLength + " - " + maxDelayLength + "):", SwingConstants.RIGHT);
 		delayField = new JTextField();
@@ -49,7 +53,7 @@ public class TrainNetworkWindow extends JFrame {
 		
 		JLabel movesLabel = new JLabel("Max moves per game (" + minMovesLength + " - " + maxMovesLength + "):", SwingConstants.RIGHT);
 		movesField = new JTextField();
-		movesField.setText("1000");
+		movesField.setText("100");
 		
 		JLabel layersLabel = new JLabel("Number of hidden layers:", SwingConstants.RIGHT);
 		layersField = new JTextField();
@@ -61,7 +65,7 @@ public class TrainNetworkWindow extends JFrame {
 		
 		JLabel alphaLabel = new JLabel("Learning Rate (" + minAlpha + " - " + maxAlpha + "):", SwingConstants.RIGHT);
 		alphaField = new JTextField();
-		alphaField.setText("2");
+		alphaField.setText("0.05");
 		
 		JLabel pathLabel = new JLabel("Save to file:", SwingConstants.RIGHT);
 		pathField = new JTextField();
@@ -103,6 +107,9 @@ public class TrainNetworkWindow extends JFrame {
 		setVisible(true);
 	}
 	
+	//Creates a new training environment for the neural network
+	//Validates the parameters before passing to the GameController
+	//Disposes itself on completion
 	private void createGame() {
 		int games, display, delay, moves, layers, layerSize;
 		double alpha;
@@ -125,7 +132,7 @@ public class TrainNetworkWindow extends JFrame {
 		if(games < minGameLength || games > maxGameLength) {
 			JOptionPane.showMessageDialog(null, "Please enter a valid number of games");
 			return;
-		} else if(display < 0 || display > games) {
+		} else if(display < 1) {
 			JOptionPane.showMessageDialog(null, "Please enter a valid number of games to display");
 			return;
 		} else if(delay < minDelayLength || delay > maxDelayLength) {
@@ -143,8 +150,8 @@ public class TrainNetworkWindow extends JFrame {
 		} else if(alpha < minAlpha || alpha > maxAlpha) {
 			JOptionPane.showMessageDialog(null, "Please enter a valid learning rate");
 			return;
-		} else if(new File(path).exists()) {
-			JOptionPane.showMessageDialog(null, "Please enter a nonexisting filename");
+		} else if(new File(path).exists() || path.equals("")) {
+			JOptionPane.showMessageDialog(null, "Please enter a valid filename");
 			return;
 		}
 		

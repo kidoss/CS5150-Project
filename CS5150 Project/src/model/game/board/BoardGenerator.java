@@ -2,9 +2,11 @@ package model.game.board;
 
 import java.util.ArrayList;
 
+//Procedurally generates a game board using given parameters
 public class BoardGenerator {
 	private static double balanceThreshold = 10.0;
 	
+	//Returns a copy of the given board
 	public static ArrayList<ArrayList<BlockType>> copyBoard(ArrayList<ArrayList<BlockType>> board) {
 		ArrayList<ArrayList<BlockType>> newBoard = new ArrayList<ArrayList<BlockType>>();
 		
@@ -20,6 +22,7 @@ public class BoardGenerator {
 		return newBoard;
 	}
 
+	//Generates a new game board with the given parameters
 	public static ArrayList<ArrayList<BlockType>> generateBoard(int w, int h, int marks, double water, double block, double spread) {
 		ArrayList<ArrayList<BlockType>> board = getBlank(w, h);
 		
@@ -33,6 +36,7 @@ public class BoardGenerator {
 		return board;
 	}
 	
+	//Prints the given game board to console
 	public static void printBoard(ArrayList<ArrayList<BlockType>> board) {
 		for(ArrayList<BlockType> blocks : board) {
 			for(BlockType block : blocks) {
@@ -51,6 +55,7 @@ public class BoardGenerator {
 		System.out.println();
 	}
 
+	//Returns a blank game board with the given dimensions
 	private static ArrayList<ArrayList<BlockType>> getBlank(int w, int h) {
 		ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
 		
@@ -66,6 +71,9 @@ public class BoardGenerator {
 		return board;
 	}
 
+	//Places the water on the board using the given parameter waterProgression
+	//Starts at the outer surrounding rectangle, and adds water tiles as it progresses inwards
+	//Each layer has a descending chance of creating water tiles
 	private static void placeWater(ArrayList<ArrayList<BlockType>> board, double waterProgression) {
 		for(int i = 0; i < (board.size() > board.get(0).size() ? board.get(0).size() : board.size()) / 2; i++) {
 			for(int j = i; j < (board.size() < board.get(0).size() ? board.get(0).size() : board.size()) - i; j++) {
@@ -100,6 +108,7 @@ public class BoardGenerator {
 		}
 	}
 	
+	//Calculates the number of blocks to place and calls placeBlock until that number is reached
 	private static void placeBlocks(ArrayList<ArrayList<BlockType>> board, double blockDensity, double blockSpread) {
 		int sand = 0, blocks = 0, placed = 0;
 		
@@ -114,6 +123,7 @@ public class BoardGenerator {
 			placed += placeBlock(board, blockSpread);
 	}
 	
+	//Places a block randomly, and expands it by chance according to the blockSpread parameter
 	private static int placeBlock(ArrayList<ArrayList<BlockType>> board, double blockSpread) {
 		int x = 0, y = 0, blocks = 1;
 		
@@ -144,6 +154,7 @@ public class BoardGenerator {
 		return blocks;
 	}
 	
+	//Checks whether a placed block is in a valid location
 	private static boolean isBlockValid(ArrayList<ArrayList<BlockType>> board, int x, int y) {
 		boolean Valid = true;
 		
@@ -161,6 +172,8 @@ public class BoardGenerator {
 		return Valid;
 	}
 
+	//Places the two spawn points on the map, in the top-left most and bottom-right most corners
+	//Only places in valid spawn points
 	private static void placeSpawns(ArrayList<ArrayList<BlockType>> board) {
 		int x = board.size() - 1, y = board.get(0).size() - 1;
 		
@@ -186,6 +199,7 @@ public class BoardGenerator {
 		board.get(x).set(y, BlockType.SPAWN);
 	}
 	
+	//Checks if a position is a valid spawn point
 	private static boolean isSpawnValid(ArrayList<ArrayList<BlockType>> board, int x, int y) {
 		if (board.get(x).get(y) != BlockType.SAND)
 			return false;
@@ -207,6 +221,8 @@ public class BoardGenerator {
 			return false;
 	}
 
+	//Places the X's on the board, the number given as a parameter
+	//Makes sure they are within a certain distance from each player so the board is balanced
 	private static void placeMarks(ArrayList<ArrayList<BlockType>> board, int marks) {
 		ArrayList<ArrayList<BlockType>> tempBoard = copyBoard(board);
 		boolean balanced = false;
@@ -235,6 +251,7 @@ public class BoardGenerator {
 					board.get(i).set(j, BlockType.MARK);
 	}
 	
+	//Checks if a location is a valid placement for an X
 	private static boolean isMarkValid(ArrayList<ArrayList<BlockType>> board, int x, int y) {
 		boolean valid = false;
 		
@@ -244,6 +261,7 @@ public class BoardGenerator {
 		return valid;
 	}
 	
+	//Gets the balance score for a distribution of marks
 	private static double getMarkScore(ArrayList<ArrayList<BlockType>> board) {
 		double score = 0;
 		int firstX = -1, firstY = 0, secondX = 0, secondY = 0;
@@ -269,6 +287,7 @@ public class BoardGenerator {
 		return score;
 	}
 
+	//Called after the water is placed, makes sure all sand tiles are reachable
 	private static void makeContiguous(ArrayList<ArrayList<BlockType>> board) {
 		int[][] coverage = getCoverage(board);
 		int zone = 1, zones = getZones(coverage), largestZone = 1;
@@ -296,6 +315,7 @@ public class BoardGenerator {
 					board.get(i).set(j, BlockType.WATER);
 	}
 	
+	//Assigns zones of coverage to each section of contiguous sand tiles
 	private static int[][] getCoverage(ArrayList<ArrayList<BlockType>> board) {
 		int[][] coverage = new int[board.size()][board.get(0).size()];
 		int zone = 1;
@@ -312,6 +332,7 @@ public class BoardGenerator {
 		return coverage;
 	}
 	
+	//Gets the number of zones in a coverage instance returned by getCoverage
 	private static int getZones(int[][] coverage) {
 		int zones = 0;
 		
@@ -323,6 +344,7 @@ public class BoardGenerator {
 		return zones;
 	}
 	
+	//Cleans the water tiles on the map, turning lone tiles into sand
 	private static void cleanWater(ArrayList<ArrayList<BlockType>> board) {
 		for(int i = 1; i < board.size() - 1; i++)
 			for(int j = 1; j < board.get(0).size() - 1; j++)
@@ -339,6 +361,8 @@ public class BoardGenerator {
 				}
 	}
 	
+	
+	//Assigns sand tiles to a zone, helping make the sand be one contiguous block
 	private static void explore(ArrayList<ArrayList<BlockType>> board, int[][] coverage, int zone, int x, int y) {
 		if(coverage[x][y] == 0 && board.get(x).get(y) == BlockType.SAND) {
 			coverage[x][y] = zone;

@@ -15,6 +15,8 @@ import javax.swing.SwingConstants;
 
 import controller.GameController;
 
+//Window for initializing a new game
+//Contains fields for parameters for the new game
 public class NewGameWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private static int minLength = 10, maxLength = 50, maxMarks = 25;
@@ -25,6 +27,7 @@ public class NewGameWindow extends JFrame {
 	private JTextField widthField, heightField, waterField, markField, blockDensityField, blockSpreadField, pathField;
 	private JComboBox<String> visibilityField;
 	
+	//Initializes the window with the parameters as fields
 	public NewGameWindow(GameController game) {
 		this.game = game;
 		
@@ -37,23 +40,23 @@ public class NewGameWindow extends JFrame {
 		
 		JLabel widthLabel = new JLabel("Board Width (" + minLength + " - " + maxLength + "):", SwingConstants.RIGHT);
 		widthField = new JTextField();
-		widthField.setText("25");
+		widthField.setText("15");
 		
 		JLabel heightLabel = new JLabel("Board Height (" + minLength + " - " + maxLength + "):", SwingConstants.RIGHT);
 		heightField = new JTextField();
-		heightField.setText("25");
+		heightField.setText("15");
 		
 		JLabel markLabel = new JLabel("Number of X's (1 - " + maxMarks + "):", SwingConstants.RIGHT);
 		markField = new JTextField();
-		markField.setText("9");
+		markField.setText("7");
 		
 		JLabel waterLabel = new JLabel("Water Progression (" + minWater + " - " + maxWater + "):", SwingConstants.RIGHT);
 		waterField = new JTextField();
-		waterField.setText("1.5");
+		waterField.setText("1.75");
 		
 		JLabel blockDensityLabel = new JLabel("Block Density (" + minBlockDensity + " - " + maxBlockDensity + "):", SwingConstants.RIGHT);
 		blockDensityField = new JTextField();
-		blockDensityField.setText("0.25");
+		blockDensityField.setText("0.2");
 		
 		JLabel blockSpreadLabel = new JLabel("Block Spread (" + minBlockSpread + " - " + maxBlockSpread + "):", SwingConstants.RIGHT);
 		blockSpreadField = new JTextField();
@@ -61,11 +64,12 @@ public class NewGameWindow extends JFrame {
 		
 		JLabel visibilityLabel = new JLabel("Full visibility:", SwingConstants.RIGHT);
 		visibilityField = new JComboBox<String>();
-		visibilityField.addItem("True");
 		visibilityField.addItem("False");
+		visibilityField.addItem("True");
 		
 		JLabel pathLabel = new JLabel("Neural Network Opponent Filename:", SwingConstants.RIGHT);
 		pathField = new JTextField();
+		pathField.setText("trained");
 		
 		JButton start = new JButton("Start");
 		JButton cancel = new JButton("Cancel");
@@ -104,6 +108,8 @@ public class NewGameWindow extends JFrame {
 		setVisible(true);
 	}
 	
+	//Passes parameters to the GameController if they pass validation
+	//Disposes itself on completion
 	private void createGame() {
 		int width, height, marks;
 		double water, density, spread;

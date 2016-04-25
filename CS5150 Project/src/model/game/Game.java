@@ -7,6 +7,7 @@ import model.game.board.BoardGenerator;
 import model.game.player.Action;
 import model.game.player.Player;
 
+//Models the game class, including the board, players and current progress
 public class Game {
 	private static int markPoints = 10, killPoints = 25;
 	public ArrayList<ArrayList<BlockType>> board;
@@ -14,6 +15,7 @@ public class Game {
 	public boolean finished;
 	public int turn;
 	
+	//Instantiates the game according to given parameters
 	public Game(int w, int h, int marks, double water, double blockDensity, double blockSpread) {
 		board = BoardGenerator.generateBoard(w, h, marks, water, blockDensity, blockSpread);
 		players = new ArrayList<Player>();
@@ -27,6 +29,7 @@ public class Game {
 					players.add(new Player(id++, i, j, 3));
 	}
 	
+	//Progresses the game using the given move
 	public boolean play(Action move) {
 		if(finished)
 			return false;
@@ -49,22 +52,8 @@ public class Game {
 		return valid;
 	}
 	
-	public ArrayList<ArrayList<BlockType>> getBoard() {
-		return board;
-	}
-	
-	public ArrayList<Player> getPlayers() {
-		return players;
-	}
-	
-	public Player getTurn() {
-		return players.get(turn);
-	}
-	
-	public boolean isFinished() {
-		return finished;
-	}
-	
+	//Executes the ATTACK action for the given player
+	//Returns false if action is not possible, true otherwise
 	private boolean attack(Player player) {
 		int x1 = player.x, x2 = player.x,  y1 = player.y, y2 = player.y;
 		
@@ -85,6 +74,8 @@ public class Game {
 		return false;
 	}
 
+	//Executes the DIG action for the given player
+	//Returns false if action is not possible, true otherwise
 	private boolean dig(Player player) {
 		if(board.get(player.x).get(player.y) == BlockType.MARK) {
 			player.points += markPoints;
@@ -99,6 +90,7 @@ public class Game {
 		return false;
 	}
 
+	//Counts and returns the number of marks left on the board
 	private int getMarks() {
 		int marks = 0;
 		
@@ -110,12 +102,16 @@ public class Game {
 		return marks;
 	}
 
+	//Executes the RIGHT action for the given player
+	//Returns false if action is not possible, true otherwise
 	private boolean right(Player player) {
 		player.direction = (player.direction + 1) % 4;
 		
 		return true;
 	}
 
+	//Executes the LEFT action for the given player
+	//Returns false if action is not possible, true otherwise
 	private boolean left(Player player) {
 		player.direction--;
 		
@@ -125,6 +121,8 @@ public class Game {
 		return true;
 	}
 
+	//Executes the MOVE action for the given player
+	//Returns false if action is not possible, true otherwise
 	private boolean move(Player player) {
 		int x = player.x, y = player.y;
 		
@@ -145,6 +143,7 @@ public class Game {
 		return false;
 	}
 	
+	//Checks whether a MOVE action is valid
 	private boolean isMoveValid(int x, int y) {
 		if(x < 0 || x >= board.size() || y <= 0 || y >= board.get(x).size())
 			return false;
@@ -159,6 +158,7 @@ public class Game {
 		return true;
 	}
 
+	//Fetches a player with the given ID
 	private Player getPlayer(int id) {
 		for(Player player : players)
 			if(player.id == id)
@@ -167,6 +167,7 @@ public class Game {
 		return null;
 	}
 	
+	//Called when a game ends, prints information about the game
 	private void gameOver() {
 		finished = true;
 		System.out.println("The game has ended!");

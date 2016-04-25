@@ -13,12 +13,15 @@ import model.game.player.Player;
 import model.neuralnet.NeuralNet;
 import view.GamePanel;
 
+//Handles the training of a new neural network
+//Draws the games according to the user-provided settings
 public class TrainingController extends GameController {
-	private static int killReward = 50, markReward = 25, deathPenalty = 25;
-	private static double rewardDecay = 0.20;
+	private static int killReward = 500, markReward = 250, deathPenalty = 25;
+	private static double rewardDecay = 0.5;
 	private int games, display, moves, drawDelay;
 	private String path;
 
+	//Initializes the neural network and sets the parameters
 	public TrainingController(int games, int display, int delay, int moves, int layers, int layerSize, double alpha,
 			String path, GamePanel gamePanel) {
 		this.games = games;
@@ -38,45 +41,25 @@ public class TrainingController extends GameController {
 		netLayers[layers + 1] = 5;
 
 		net = new NeuralNet(netLayers, alpha);
-
-		reinforceActions();
 	}
 
+	//Begins the training
 	public void run() {
+		reinforceSingleActions(10000);
 		trainGames(games, display, drawDelay, moves, path);
+		reinforceSingleActions(100);
 		net.save(path);
 	}
-
-	// Creates a new neural network, trains it using parameters given and saves
-	// it to path given
-	public void trainNetwork(int games, int display, int delay, int moves, int layers, int layerSize, double alpha,
-			String path) {
-		int[] netLayers = new int[layers + 2];
-
-		netLayers[0] = new Player(0, 0, 0, 0).getNeuralNetInput(BoardGenerator.generateBoard(25, 25, 5, 1.5, 0.3, 0.3),
-				new Player(0, 0, 0, 0)).length;
-
-		for (int i = 0; i < layers; i++)
-			netLayers[i + 1] = layerSize;
-
-		netLayers[layers + 1] = 5;
-
-		net = new NeuralNet(netLayers, alpha);
-
-		//reinforceActions();
-		trainGames(games, display, delay, moves, path);
-		net.save(path);
-	}
-
+	
 	// Trains a neural network according to the parameters set by the user
 	private void trainGames(int games, int display, int delay, int moves, String path) {
 		for (int i = 0; i < games; i++) {
 			int w = (int) (10 + (((double) i) / games) * 15);
 			int h = (int) (10 + (((double) i) / games) * 15);
-			int marks = (int) (10 + (((double) i) / games) * 40);
-			double water = 3.0;// - (((double) i) / games) * 1.75;
-			double density = 0.1;// + (((double) i) / games) * 0.3;
-			double spread = 0.1;// + (((double) i) / games) * 0.4;
+			int marks = (int) (20 + (((double) i) / games) * 40);
+			double water = 3.0 - (((double) i) / games) * 1.75;
+			double density = 0.1 + (((double) i) / games) * 0.3;
+			double spread = 0.1 + (((double) i) / games) * 0.4;
 			boolean show = false;
 	
 			if ((i + 1) % display == 0)
@@ -84,7 +67,7 @@ public class TrainingController extends GameController {
 	
 			System.out.println("Game " + (i + 1));
 			trainGame(w, h, marks, moves, water, density, spread, show, delay);
-			//reinforceActions();
+			//reinforceSingleActions(500);
 		}
 	}
 
@@ -98,6 +81,7 @@ public class TrainingController extends GameController {
 		game = new Game(w, h, marks, water, density, spread);
 		int move = 0, oneTurn = 0, twoTurn = 0;
 		int dig = 0, moved = 0, turn = 0, attack = 0;
+		gamePanel.draw(game, true);
 	
 		while (!game.finished && move++ < moves) {
 			if (show) {
@@ -212,7 +196,7 @@ public class TrainingController extends GameController {
 				if (i == act)
 					training.add(1.0);
 				else
-					training.add(-1.0);
+					training.add(0.0);
 	
 			data.add(training);
 	
@@ -225,8 +209,8 @@ public class TrainingController extends GameController {
 					rewards.add(markReward);
 				else if (reward == 25)
 					rewards.add(killReward);
-				//else if (action == Action.MOVE)
-				//	rewards.add(1);
+				else if (action == Action.MOVE)
+					rewards.add(1);
 				else
 					rewards.add(0);
 			} else {
@@ -271,7 +255,7 @@ public class TrainingController extends GameController {
 	}
 
 	// Copies data points according to their reward value to reflect how many
-	// times they're reinforced
+	// times they're traind
 	// on the network
 	// Also reverses the expected output for data points with negative rewards
 	private void expandTrainingData(ArrayList<ArrayList<Double>> data, ArrayList<Integer> rewards) {
@@ -290,7 +274,7 @@ public class TrainingController extends GameController {
 
 	// Trains the network with the given set of data (including input and
 	// output), using the
-	// rewards for each data point to tell it how much to reinforce
+	// rewards for each data point to tell it how much to train
 	private void trainNetwork(ArrayList<ArrayList<Double>> data, ArrayList<Integer> rewards) {
 		int inputSize = data.get(0).size() - 5;
 	
@@ -306,7 +290,7 @@ public class TrainingController extends GameController {
 	
 			if (rewards.get(i) < 0)
 				for (int j = 0; j < 5; j++)
-					output[j] = output[j] == 1.0 ? -1.0 : 1.0;
+					output[j] = output[j] == 1.0 ? 0.0 : 1.0;
 	
 			for (int j = 0; j < Math.abs(rewards.get(i)); j++)
 				if (rewards.get(i) != -1)
@@ -314,6 +298,7 @@ public class TrainingController extends GameController {
 		}
 	}
 
+	//Returns a random block, weighted towards SAND
 	private BlockType getRandomBlock() {
 		double rnd = Math.random();
 	
@@ -327,13 +312,14 @@ public class TrainingController extends GameController {
 			return BlockType.SAND;
 	}
 
+	//Returns a random neural network output that is not act
 	private double[] getRandomOutput(int act) {
 		double[] output = new double[5];
-		output[0] = -1;
-		output[1] = -1;
-		output[2] = -1;
-		output[3] = -1;
-		output[4] = -1;
+		output[0] = 0;
+		output[1] = 0;
+		output[2] = 0;
+		output[3] = 0;
+		output[4] = 0;
 		int out;
 	
 		do {
@@ -345,6 +331,7 @@ public class TrainingController extends GameController {
 		return output;
 	}
 
+	//Return a random neural network output that is not action
 	private double[] getRandomOutput(Action action) {
 		int act = 0;
 		
@@ -357,11 +344,11 @@ public class TrainingController extends GameController {
 		}
 		
 		double[] output = new double[5];
-		output[0] = -1;
-		output[1] = -1;
-		output[2] = -1;
-		output[3] = -1;
-		output[4] = -1;
+		output[0] = 0;
+		output[1] = 0;
+		output[2] = 0;
+		output[3] = 0;
+		output[4] = 0;
 		int out;
 	
 		do {
@@ -373,6 +360,8 @@ public class TrainingController extends GameController {
 		return output;
 	}
 
+	//Prints a list of training data used
+	//Unable to use because of memory limitations
 	private void printTrainingData(ArrayList<ArrayList<Double>> trainingData, String path) {
 		try {
 			PrintWriter pw = new PrintWriter(new File(path + "-training.dat"));
@@ -390,106 +379,172 @@ public class TrainingController extends GameController {
 		}
 	}
 
-	private void reinforceActions() {
-		reinforceMove();
-		reinforceAttack();
-		reinforceDig();
-	}
-
-	private void reinforceMove() {
-		double[] output = {-1, -1, -1, -1, 1};
-		for (int i = 0; i < 250; i++) {
-			ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
-			Player player = new Player(0, 12, 12, ((int) (Math.random() * 5)));
-
-			for (int j = 0; j < 25; j++) {
-				ArrayList<BlockType> row = new ArrayList<BlockType>();
-
-				for (int k = 0; k < 25; k++)
-					row.add(getRandomBlock());
-
-				board.add(row);
-			}
-
-			board.get(12).set(12, BlockType.SAND);
-
-			switch (player.direction) {
-			case 0:
-				board.get(12).set(11, BlockType.SAND);
-				break;
-			case 1:
-				board.get(13).set(12, BlockType.SAND);
-				break;
-			case 2:
-				board.get(12).set(13, BlockType.SAND);
-				break;
-			case 3:
-				board.get(11).set(12, BlockType.SAND);
-				break;
-			}
-
-			net.backpropagate(player.getNeuralNetInput(board, new Player(1, ((int) (Math.random() * 25)),
-					((int) (Math.random() * 25)), ((int) (Math.random() * 5)))), output);
+	//Reinforces actions so that it knows when to perform an action
+	//i.e. dig when on top of X
+	private void reinforceSingleActions(int n) {
+		for(int j = 0; j < n; j++) {
+			double rnd = Math.random();
+			
+			if(rnd < .2)
+				trainMove();
+			else if(rnd >= .2 && rnd < 0.4)
+				trainLeft();
+			else if(rnd >= .4 && rnd < 0.6)
+				trainRight();
+			else if(rnd >= .6 && rnd < 0.8)
+				trainDig();
+			else if(rnd >= .8)
+				trainAttack();
 		}
 	}
 
-	private void reinforceAttack() {
-		double[] output = { 1, -1, -1, -1, -1 };
-		for (int i = 0; i < 250; i++) {
-			ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
-			Player player = new Player(0, 12, 12, ((int) (Math.random() * 5)));
+	//Generates a random board where a MOVE action is appropriate and backpropagates MOVE
+	private Action trainMove() {
+		double[] output = {0, 0, 0, 0, 1};
+		ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
+		Player player = new Player(0, 12, 12, 0);
 
-			for (int j = 0; j < 25; j++) {
-				ArrayList<BlockType> row = new ArrayList<BlockType>();
+		for (int j = 0; j < 25; j++) {
+			ArrayList<BlockType> row = new ArrayList<BlockType>();
 
-				for (int k = 0; k < 25; k++)
-					row.add(getRandomBlock());
+			for (int k = 0; k < 25; k++)
+				row.add(getRandomBlock());
 
-				board.add(row);
-			}
-
-			board.get(12).set(12, BlockType.SAND);
-			int dist = (int) (1 + (Math.random() * 2));
-			Player opponent;
-
-			switch (player.direction) {
-			case 0:
-				opponent = new Player(1, 12, 12 - dist, ((int) (Math.random() * 4)));
-				break;
-			case 1:
-				opponent = new Player(1, 12 + dist, 12, ((int) (Math.random() * 4)));
-				break;
-			case 2:
-				opponent = new Player(1, 12, 12 + dist, ((int) (Math.random() * 4)));
-				break;
-			default:
-				opponent = new Player(1, 12 - dist, 12, ((int) (Math.random() * 4)));
-				break;
-			}
-
-			net.backpropagate(player.getNeuralNetInput(board, opponent), output);
+			board.add(row);
 		}
+
+		board.get(12).set(12, BlockType.SAND);
+		board.get(12).set(11, BlockType.SAND);
+		
+		double[] input = player.getNeuralNetInput(board, new Player(1, ((int) (Math.random() * 25)),
+				((int) (Math.random() * 25)), ((int) (Math.random() * 5))));
+
+		net.backpropagate(input, output);
+		//System.out.println("Move " + getNeuralNetAction(input));
+		return getNeuralNetAction(input);
+	}
+	
+	//Generates a random board where a LEFT action is appropriate and backpropagates LEFT
+	private Action trainLeft() {
+		double[] output = {0, 0, 1, 0, 0};
+		ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
+		Player player = new Player(0, 12, 12, 0);
+
+		for (int j = 0; j < 25; j++) {
+			ArrayList<BlockType> row = new ArrayList<BlockType>();
+
+			for (int k = 0; k < 25; k++)
+				row.add(getRandomBlock());
+
+			board.add(row);
+		}
+
+		board.get(12).set(12, BlockType.SAND);
+		board.get(11).set(12, BlockType.SAND);
+		
+		if(Math.random() < 0.2)
+			board.get(12).set(11, BlockType.WATER);
+		else
+			board.get(12).set(11, BlockType.BLOCK);
+		
+		if(Math.random() < 0.2)
+			board.get(13).set(12, BlockType.WATER);
+		else
+			board.get(13).set(12, BlockType.BLOCK);
+		
+		double[] input = player.getNeuralNetInput(board, new Player(1, ((int) (Math.random() * 25)),
+				((int) (Math.random() * 25)), ((int) (Math.random() * 5))));
+		
+		net.backpropagate(input, output);
+		//System.out.println("Left " + getNeuralNetAction(input));
+		return getNeuralNetAction(input);
+	}
+	
+	//Generates a random board where a RIGHT action is appropriate and backpropagates RIGHT
+	private Action trainRight() {
+		double[] output = {0, 0, 0, 1, 0};
+		ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
+		Player player = new Player(0, 12, 12, 0);
+
+		for (int j = 0; j < 25; j++) {
+			ArrayList<BlockType> row = new ArrayList<BlockType>();
+
+			for (int k = 0; k < 25; k++)
+				row.add(getRandomBlock());
+
+			board.add(row);
+		}
+
+		board.get(12).set(12, BlockType.SAND);
+		board.get(13).set(12, BlockType.SAND);
+		
+		if(Math.random() < 0.2)
+			board.get(12).set(11, BlockType.WATER);
+		else
+			board.get(12).set(11, BlockType.BLOCK);
+		
+		if(Math.random() < 0.2)
+			board.get(13).set(12, BlockType.WATER);
+		else
+			board.get(13).set(12, BlockType.BLOCK);
+		
+		double[] input = player.getNeuralNetInput(board, new Player(1, ((int) (Math.random() * 25)),
+				((int) (Math.random() * 25)), ((int) (Math.random() * 5))));
+		
+		net.backpropagate(input, output);
+		//System.out.println("Right " + getNeuralNetAction(input));
+		return getNeuralNetAction(input);
 	}
 
-	private void reinforceDig() {
-		double[] output = { -1, 1, -1, -1, -1 };
-		for (int i = 0; i < 250; i++) {
-			ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
-			Player player = new Player(0, 12, 12, ((int) (Math.random() * 5)));
+	//Generates a random board where a ATTACK action is appropriate and backpropagates ATTACK
+	private Action trainAttack() {
+		double[] output = { 1, 0, 0, 0, 0 };
+		ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
+		Player player = new Player(0, 12, 12, 0);
 
-			for (int j = 0; j < 25; j++) {
-				ArrayList<BlockType> row = new ArrayList<BlockType>();
+		for (int j = 0; j < 25; j++) {
+			ArrayList<BlockType> row = new ArrayList<BlockType>();
 
-				for (int k = 0; k < 25; k++)
-					row.add(getRandomBlock());
+			for (int k = 0; k < 25; k++)
+				row.add(getRandomBlock());
 
-				board.add(row);
-			}
-
-			board.get(12).set(12, BlockType.MARK);
-
-			net.backpropagate(player.getNeuralNetInput(board, new Player(1, ((int) (Math.random() * 25)),
-					((int) (Math.random() * 25)), ((int) (Math.random() * 4)))), output);
+			board.add(row);
 		}
+
+		board.get(12).set(12, BlockType.SAND);
+		board.get(12).set(11, BlockType.SAND);
+		board.get(12).set(10, BlockType.SAND);
+		
+		double[] input = player.getNeuralNetInput(board, new Player(1, 12,
+				11 - ((int) Math.random() * 2), ((int) (Math.random() * 5))));
+
+		net.backpropagate(input, output);
+		//System.out.println("Attack " + getNeuralNetAction(input));
+		return getNeuralNetAction(input);
+	}
+
+	//Generates a random board where a DIG action is appropriate and backpropagates DIG
+	private Action trainDig() {
+		double[] output = { 0, 1, 0, 0, 0 };
+		ArrayList<ArrayList<BlockType>> board = new ArrayList<ArrayList<BlockType>>();
+		Player player = new Player(0, 12, 12, 0);
+
+		for (int j = 0; j < 25; j++) {
+			ArrayList<BlockType> row = new ArrayList<BlockType>();
+
+			for (int k = 0; k < 25; k++)
+				row.add(getRandomBlock());
+
+			board.add(row);
+		}
+
+		board.get(12).set(12, BlockType.MARK);
+		
+		double[] input = player.getNeuralNetInput(board, new Player(1, ((int) (Math.random() * 25)),
+				((int) (Math.random() * 25)), ((int) (Math.random() * 5))));
+		
+		net.backpropagate(input, output);
+		//System.out.println("Dig " + getNeuralNetAction(input));
+		return getNeuralNetAction(input);
 	}
 }

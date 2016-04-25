@@ -4,12 +4,14 @@ import java.util.ArrayList;
 
 import model.game.board.BlockType;
 
+//Represents a player in the game
 public class Player {
 	public boolean[][] vision;
 	public int x, y, id, direction;
 	public double points;
 	public Action nextAction;
 	
+	//Initializations
 	public Player(int id, int x, int y, int direction) {
 		this.id = id;
 		this.x = x;
@@ -20,6 +22,7 @@ public class Player {
 		nextAction = null;
 	}
 	
+	//Returns the input for a neural network using the given board, opponent player and the vision defined below
 	public double[] getNeuralNetInput(ArrayList<ArrayList<model.game.board.BlockType>> board, Player opponent) {
 		ArrayList<Double> tempInput = new ArrayList<Double>();
 		double span = getManhattanDistance(0, 0, board.size(), board.get(0).size());
@@ -27,21 +30,22 @@ public class Player {
 		for(int i = 0; i < vision.length; i++)
 			for(int j = 0; j < vision[i].length; j++)
 				if(vision[i][j]) {
-					int yOff = 5 - i;
-					int xOff = 4 - j;
+					int yOffset = 5 - i;
+					int xOffset = 4 - j;
+					int yOff, xOff;
 					
 					if(direction == 0) {
-						yOff = y - yOff;
-						xOff = x - xOff;
+						yOff = y - yOffset;
+						xOff = x - xOffset;
 					} else if (direction == 1) {
-						yOff = y - xOff;
-						xOff = x + yOff;
+						yOff = y - xOffset;
+						xOff = x + yOffset;
 					} else if (direction == 2) {
-						yOff = y + yOff;
-						xOff = x + xOff;
+						yOff = y + yOffset;
+						xOff = x + xOffset;
 					} else {
-						yOff = y + xOff;
-						xOff = x - yOff;
+						yOff = y + xOffset;
+						xOff = x - yOffset;
 					}
 					
 					if(opponent.x == xOff && opponent.y == yOff) {
@@ -108,10 +112,7 @@ public class Player {
 		return input;
 	}
 	
-	private double getManhattanDistance(int x1, int y1, int x2, int y2) {
-		return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-	}
-	
+	//Checks whether a coordinate is in sight of the player
 	public boolean inSight(int obsX, int obsY) {
 		obsX -= x;
 		obsY -= y;
@@ -141,6 +142,12 @@ public class Player {
 		return vision[obsX][obsY];	
 	}
 
+	//Gets the manhattan distance from one point to the other
+	private static double getManhattanDistance(int x1, int y1, int x2, int y2) {
+		return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+	}
+
+	//Sets which spaces around a player that they can see
 	private void setVision() {
 		vision = new boolean[9][11];
 		vision[0] = new boolean[]{false, false, false, false, false, false, false, false, false, false, false};

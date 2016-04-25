@@ -14,6 +14,9 @@ import controller.GameController;
 import model.game.Game;
 import model.game.player.Action;
 
+//Main window of the program
+//Contains a menu for creating a new game, training a new network and exiting
+//Contains a GamePanel which is passed to a GameController so it can draw a game board in the window
 public class MainWindow extends JFrame implements ActionListener, KeyListener {
 	private static final long serialVersionUID = 1L;
 	private JMenuBar menuBar;
@@ -24,6 +27,7 @@ public class MainWindow extends JFrame implements ActionListener, KeyListener {
 	private GamePanel gamePanel;
 	private GameController game;
 
+	//Initializes everything in the window
 	public MainWindow() {
 		super();
 		
@@ -63,6 +67,7 @@ public class MainWindow extends JFrame implements ActionListener, KeyListener {
 		gamePanel.draw(new Game(25, 25, 9, 2, .2, .25), true);
 	}
 
+	//Handles performed actions, specifically options selected from the menu
 	public void actionPerformed(ActionEvent event) {
 		String action = event.getActionCommand();
 		game = new GameController();
@@ -76,9 +81,11 @@ public class MainWindow extends JFrame implements ActionListener, KeyListener {
 			System.exit(0);
 	}
 
+	//Not used
 	public void keyPressed(KeyEvent e) {
 	}
 
+	//Passes input to the GameController when a game is active
 	public void keyReleased(KeyEvent e) {
 		if(game != null)
 	        if(e.getKeyCode()== KeyEvent.VK_RIGHT)
@@ -95,70 +102,7 @@ public class MainWindow extends JFrame implements ActionListener, KeyListener {
 	        	game.setVisibility(!game.getVisibility());
 	}
 
+	//Not used
 	public void keyTyped(KeyEvent e) {
 	}
-	
-	/*private void play(Action action) {
-		if(game.finished)
-			return;
-		
-		playing = true;
-		boolean valid = game.play(action);
-		drawGame();
-		
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		if(game.finished)
-			return;
-		
-		if(valid) {
-			valid = false;
-			
-			while(!valid)
-				valid = game.play(getNeuralNetAction());
-			
-			drawGame();
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		playing = false;
-	}
-	
-	private Action getNeuralNetAction() {
-		double[] input = game.players.get(1).getNeuralNetInput(game.board, game.players.get(0));
-		int act = net.classify(input);
-		
-		switch(act) {
-		case 0: return Action.ATTACK;
-		case 1: return Action.DIG;
-		case 2: return Action.LEFT;
-		case 3: return Action.RIGHT;
-		default: return Action.MOVE;
-		}
-	}
-	
-	private  Action getRandom() {
-		double rnd = Math.random();
-		Action action = Action.MOVE;
-		
-		if(rnd < 0.05)
-			action = Action.ATTACK;
-		else if(rnd < 0.1)
-			action = Action.DIG;
-		else if(rnd < 0.3)
-			action = Action.LEFT;
-		else if(rnd < 0.5)
-			action = Action.RIGHT;
-		
-		return action;
-	}*/
 }

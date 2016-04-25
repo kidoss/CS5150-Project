@@ -9,6 +9,7 @@ import model.game.Game;
 import model.game.board.BlockType;
 import model.game.player.Player;
 
+//Panel in a window that draws a given game board
 public class GamePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private static Color dark = Color.gray;
@@ -16,6 +17,9 @@ public class GamePanel extends JPanel {
 	private static Color water = Color.blue;
 	private static Color block = new Color(50, 83, 26);
 	
+	//Main functionality of the panel, draws the given board
+	//Tiles are assigned colors above
+	//Vision dictates whether fog of war is drawn
 	public void draw(Game game, boolean fullVision) {
 		Graphics g = getGraphics();
 		int xInt = getWidth() / game.board.size(), yInt = getHeight() / game.board.get(0).size();
@@ -86,6 +90,7 @@ public class GamePanel extends JPanel {
 			}
 	}
 	
+	//Posts a dialog box to the user with the given message
 	public void postMessage(String message) {
 		JOptionPane.showMessageDialog(null, message);
 	}
