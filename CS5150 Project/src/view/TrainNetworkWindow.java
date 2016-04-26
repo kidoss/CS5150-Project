@@ -23,7 +23,7 @@ public class TrainNetworkWindow extends JFrame {
 	private static int minMovesLength = 100, maxMovesLength = 5000;
 	private static int minLayersLength = 1, maxLayersLength = 5;
 	private static int minLayersSize = 5, maxLayersSize = 100;
-	private static double minAlpha = 0.01, maxAlpha = .3;
+	private static double minAlpha = 0.001, maxAlpha = .3;
 	private GameController game;
 	private JTextField gamesField, displayField, delayField, movesField, layersField, layerSizeField, alphaField, pathField;
 	
